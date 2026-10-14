@@ -25,6 +25,20 @@ export default function ProjectQuotationSearch({allowAttachments=true}:{allowAtt
   const [searching,setSearching] = useState(false);
   const [searched,setSearched] = useState(false);
   const [error,setError] = useState("");
+  const [vendorFilter,setVendorFilter] = useState("all");
+  const [makeFilter,setMakeFilter] = useState("all");
+  const [dateSort,setDateSort] = useState("latest");
+
+  const vendorOptions = [...new Set(results.map(q=>q.vendors?.name?.trim()).filter((v): v is string => Boolean(v)))].sort((a,b)=>a.localeCompare(b));
+  const makeOptions = [...new Set(results.map(q=>q.make?.trim()).filter((v): v is string => Boolean(v)))].sort((a,b)=>a.localeCompare(b));
+  const filteredResults = results.filter(q =>
+    (vendorFilter === "all" || q.vendors?.name === vendorFilter) &&
+    (makeFilter === "all" || q.make === makeFilter)
+  ).sort((a,b) => {
+    const dateA = a.quotation_date ? new Date(a.quotation_date).getTime() : 0;
+    const dateB = b.quotation_date ? new Date(b.quotation_date).getTime() : 0;
+    return dateSort === "latest" ? dateB-dateA : dateA-dateB;
+  });
 
   useEffect(() => {
     let live = true;
@@ -42,7 +56,7 @@ export default function ProjectQuotationSearch({allowAttachments=true}:{allowAtt
   useEffect(() => {
     let live = true;
     async function loadItems() {
-      setItems([]); setItemName(""); setResults([]); setSearched(false);
+      setItems([]); setItemName(""); setResults([]); setSearched(false); setVendorFilter("all"); setMakeFilter("all"); setDateSort("latest");
       if (!projectId) return;
       setLoadingItems(true); setError("");
       const { data, error } = await supabase.from("quotations").select("item_id,items(id,name,item_code)").eq("project_id",projectId);
@@ -63,7 +77,7 @@ export default function ProjectQuotationSearch({allowAttachments=true}:{allowAtt
   async function search() {
     const chosen=items.find(i=>i.name.toLocaleLowerCase()===itemName.trim().toLocaleLowerCase());
     if (!projectId || !chosen) { setError("Please select an item from the suggestions."); return; }
-    setSearching(true); setError(""); setSearched(false); setResults([]);
+    setSearching(true); setError(""); setSearched(false); setResults([]); setVendorFilter("all"); setMakeFilter("all"); setDateSort("latest");
     const { data, error } = await supabase.from("quotations")
       .select("id,quotation_date,quoted_rate,unit,labour,transport,gst_percent,description,make,quotation_file_path,vendors(name)")
       .eq("project_id",projectId).eq("item_id",chosen.id).order("quotation_date",{ascending:false});
@@ -100,9 +114,23 @@ export default function ProjectQuotationSearch({allowAttachments=true}:{allowAtt
       {error&&<p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
     </div>
     {searched&&<div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 p-5"><div><h3 className="font-semibold text-slate-800">Quotation history</h3><p className="mt-1 text-xs text-slate-500">{results.length} record{results.length===1?"":"s"} found for selected project and item</p></div><button onClick={()=>{setItemName("");setResults([]);setSearched(false)}} className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-800"><RotateCcw size={14}/> Reset item</button></div>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 p-5"><div><h3 className="font-semibold text-slate-800">Quotation history</h3><p className="mt-1 text-xs text-slate-500">{filteredResults.length} of {results.length} quotation record{results.length===1?"":"s"} shown</p></div><button onClick={()=>{setItemName("");setResults([]);setSearched(false);setVendorFilter("all");setMakeFilter("all");setDateSort("latest")}} className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-800"><RotateCcw size={14}/> Reset item</button></div>
       {!results.length?<div className="p-10 text-center text-sm text-slate-500">No quotations were found for this project and item.</div>:
-      <div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left text-sm"><thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-3">Date</th><th className="px-4 py-3">Vendor</th><th className="px-4 py-3">Make / Description</th><th className="px-4 py-3 text-right">Quoted rate</th><th className="px-4 py-3">Unit</th><th className="px-4 py-3 text-right">Labour</th><th className="px-4 py-3 text-right">Transport</th><th className="px-4 py-3 text-right">GST</th>{allowAttachments&&<th className="px-4 py-3">Attachment</th>}</tr></thead><tbody className="divide-y divide-slate-100">{results.map(q=><tr key={q.id} className="hover:bg-slate-50/70"><td className="whitespace-nowrap px-4 py-3">{q.quotation_date?new Date(q.quotation_date).toLocaleDateString("en-IN"):"—"}</td><td className="px-4 py-3 font-medium">{q.vendors?.name??"—"}</td><td className="max-w-[240px] px-4 py-3"><div className="font-medium">{q.make||"—"}</div><div className="text-xs text-slate-500">{q.description||"—"}</div></td><td className="px-4 py-3 text-right tabular-nums">₹{Number(q.quoted_rate||0).toLocaleString("en-IN",{maximumFractionDigits:2})}</td><td className="px-4 py-3">{q.unit??"—"}</td><td className="px-4 py-3 text-right tabular-nums">{q.labour??"—"}</td><td className="px-4 py-3 text-right tabular-nums">{q.transport??"—"}</td><td className="px-4 py-3 text-right tabular-nums">{q.gst_percent==null?"—":String(q.gst_percent)+"%"}</td>{allowAttachments&&<td className="px-4 py-3">{q.quotation_file_path?<button onClick={()=>void openAttachment(q.quotation_file_path)} className="inline-flex items-center gap-1 text-xs font-semibold text-sky-700 hover:underline"><FileText size={14}/> View file</button>:"—"}</td>}</tr>)}</tbody></table></div>}
+      <>
+      <div className="grid gap-3 border-b border-slate-100 bg-slate-50 p-5 md:grid-cols-3">
+        <label className="block text-xs font-semibold text-slate-600">Filter by Vendor
+          <select value={vendorFilter} onChange={e=>setVendorFilter(e.target.value)} className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-normal text-slate-800"><option value="all">All vendors</option>{vendorOptions.map(v=><option key={v} value={v}>{v}</option>)}</select>
+        </label>
+        <label className="block text-xs font-semibold text-slate-600">Filter by Make / Brand
+          <select value={makeFilter} onChange={e=>setMakeFilter(e.target.value)} className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-normal text-slate-800"><option value="all">All makes / brands</option>{makeOptions.map(m=><option key={m} value={m}>{m}</option>)}</select>
+        </label>
+        <label className="block text-xs font-semibold text-slate-600">Sort by Quotation Date
+          <select value={dateSort} onChange={e=>setDateSort(e.target.value)} className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-normal text-slate-800"><option value="latest">Latest first</option><option value="oldest">Oldest first</option></select>
+        </label>
+      </div>
+      {!filteredResults.length?<div className="p-10 text-center text-sm text-slate-500">No quotations match the selected filters. Try changing or clearing the filters.</div>:
+      <div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left text-sm"><thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-3">Date</th><th className="px-4 py-3">Vendor</th><th className="px-4 py-3">Make / Description</th><th className="px-4 py-3 text-right">Quoted rate</th><th className="px-4 py-3">Unit</th><th className="px-4 py-3 text-right">Labour</th><th className="px-4 py-3 text-right">Transport</th><th className="px-4 py-3 text-right">GST</th>{allowAttachments&&<th className="px-4 py-3">Attachment</th>}</tr></thead><tbody className="divide-y divide-slate-100">{filteredResults.map(q=><tr key={q.id} className="hover:bg-slate-50/70"><td className="whitespace-nowrap px-4 py-3">{q.quotation_date?new Date(q.quotation_date).toLocaleDateString("en-IN"):"—"}</td><td className="px-4 py-3 font-medium">{q.vendors?.name??"—"}</td><td className="max-w-[240px] px-4 py-3"><div className="font-medium">{q.make||"—"}</div><div className="text-xs text-slate-500">{q.description||"—"}</div></td><td className="px-4 py-3 text-right tabular-nums">₹{Number(q.quoted_rate||0).toLocaleString("en-IN",{maximumFractionDigits:2})}</td><td className="px-4 py-3">{q.unit??"—"}</td><td className="px-4 py-3 text-right tabular-nums">{q.labour??"—"}</td><td className="px-4 py-3 text-right tabular-nums">{q.transport??"—"}</td><td className="px-4 py-3 text-right tabular-nums">{q.gst_percent==null?"—":String(q.gst_percent)+"%"}</td>{allowAttachments&&<td className="px-4 py-3">{q.quotation_file_path?<button onClick={()=>void openAttachment(q.quotation_file_path)} className="inline-flex items-center gap-1 text-xs font-semibold text-sky-700 hover:underline"><FileText size={14}/> View file</button>:"—"}</td>}</tr>)}</tbody></table></div>}
+      </>}
     </div>}
   </section>;
 }
