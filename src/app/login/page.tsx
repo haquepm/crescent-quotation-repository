@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Building2, ShieldCheck, Sparkles } from "lucide-react";
+import { ShieldCheck, Sparkles } from "lucide-react";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -20,21 +20,21 @@ export default function LoginPage() {
       setLoading(false);
     }
   }
-  return <main className="min-h-screen grid lg:grid-cols-[1.05fr_.95fr] bg-[#070811] text-white">
+  return <main className="min-h-screen grid lg:grid-cols-[1.05fr_.95fr] bg-[#071521] text-white">
     <section className="relative hidden lg:flex flex-col justify-between overflow-hidden border-r border-white/10 p-14">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_78%_12%,rgba(142,111,255,.30),transparent_34%),radial-gradient(ellipse_at_15%_85%,rgba(38,157,177,.12),transparent_38%)]"/>
-      <div className="relative flex items-center gap-3"><div className="rounded-2xl border border-white/10 bg-white/[.07] p-3 shadow-lg"><Building2 size={27}/></div><div><div className="font-bold tracking-[.13em]">CRESCENT</div><div className="text-[10px] tracking-[.28em] text-violet-200/70">CONTRACTORS</div></div></div>
-      <div className="relative max-w-2xl"><p className="mb-5 flex items-center gap-2 text-xs font-semibold tracking-[.3em] text-violet-300"><Sparkles size={15}/> PROCUREMENT INTELLIGENCE</p><h1 className="text-6xl font-semibold leading-[1.12] tracking-[-.045em]">Every quotation.<br/><span className="bg-gradient-to-r from-white via-violet-200 to-cyan-200 bg-clip-text text-transparent">One trusted source.</span></h1><p className="mt-7 max-w-lg text-base leading-8 text-slate-300">A central workspace for quotation requests, vendor rates and informed purchasing decisions.</p></div>
-      <div className="relative flex items-center justify-between text-xs text-slate-500"><span>Crescent Contractors · Internal business application</span><span className="text-slate-400">Designed &amp; Developed by <strong className="text-violet-200">Mutheeul Haq</strong></span></div>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_78%_12%,rgba(0,110,182,.34),transparent_34%),radial-gradient(ellipse_at_15%_85%,rgba(243,144,9,.14),transparent_38%)]"/>
+      <div className="relative flex items-center gap-3"><img src="https://skyblue-sandpiper-962282.hostingersite.com/wp-content/uploads/2026/10/CRESCENT-Logo.webp" alt="Crescent Contractors" className="h-14 w-auto max-w-[250px] object-contain" /></div>
+      <div className="relative max-w-2xl"><p className="mb-5 flex items-center gap-2 text-xs font-semibold tracking-[.3em] text-[#F39009]"><Sparkles size={15}/> PROCUREMENT INTELLIGENCE</p><h1 className="text-6xl font-semibold leading-[1.12] tracking-[-.045em]">Every quotation.<br/><span className="bg-gradient-to-r from-white via-[#8bd0ff] to-[#F39009] bg-clip-text text-transparent">One trusted source.</span></h1><p className="mt-7 max-w-lg text-base leading-8 text-slate-300">A central workspace for quotation requests, vendor rates and informed purchasing decisions.</p></div>
+      <div className="relative flex items-center justify-between text-xs text-slate-500"><span>Crescent Contractors · Internal business application</span><span className="text-slate-400">Designed &amp; Developed by <strong className="text-[#8bd0ff]">Mutheeul Haq</strong></span></div>
     </section>
     <section className="relative flex items-center justify-center overflow-hidden p-8">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,rgba(126,99,207,.16),transparent_42%)]"/>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,rgba(0,110,182,.18),transparent_42%)]"/>
       <div className="relative w-full max-w-md">
-        <div className="mb-12 flex items-center gap-3 lg:hidden"><Building2/><strong className="tracking-widest">CRESCENT CONTRACTORS</strong></div>
-        <div className="mb-10"><p className="text-xs font-semibold tracking-[.28em] text-violet-300">QUOTATION REPOSITORY</p><h2 className="mt-4 text-4xl font-semibold tracking-tight text-white">Welcome back</h2><p className="mt-3 text-sm leading-6 text-slate-400">Sign in using your authorised Google account.</p></div>
-        <button onClick={signIn} disabled={loading} className="flex w-full items-center justify-center gap-3 rounded-xl border border-violet-200/20 bg-white/[.06] py-4 font-semibold text-white shadow-[0_12px_35px_rgba(0,0,0,.25)] transition hover:border-violet-200/40 hover:bg-white/[.1] disabled:opacity-60"><GoogleMark/>{loading ? "Connecting…" : "Continue with Google"}</button>
-        <div className="mt-7 flex items-center justify-center gap-2 text-xs text-slate-500"><ShieldCheck size={15} className="text-violet-300"/> Secure sign-in · Access managed by Administrator</div>
-        <p className="mt-16 text-center text-xs leading-6 text-slate-500">© {new Date().getFullYear()} Crescent Contractors. Internal use only.<br/><span className="text-slate-400">Designed &amp; Developed by <strong className="font-semibold text-violet-200">Mutheeul Haq</strong></span></p>
+        <div className="mb-12 flex items-center gap-3 lg:hidden"><img src="https://skyblue-sandpiper-962282.hostingersite.com/wp-content/uploads/2026/10/CRESCENT-Logo.webp" alt="Crescent Contractors" className="h-12 w-auto max-w-[220px] object-contain" /></div>
+        <div className="mb-10"><p className="text-xs font-semibold tracking-[.28em] text-[#F39009]">QUOTATION REPOSITORY</p><h2 className="mt-4 text-4xl font-semibold tracking-tight text-white">Welcome back</h2><p className="mt-3 text-sm leading-6 text-slate-400">Sign in using your authorised Google account.</p></div>
+        <button onClick={signIn} disabled={loading} className="flex w-full items-center justify-center gap-3 rounded-xl border border-[#006EB6]/35 bg-white/[.06] py-4 font-semibold text-white shadow-[0_12px_35px_rgba(0,0,0,.25)] transition hover:border-[#F39009]/60 hover:bg-white/[.1] disabled:opacity-60"><GoogleMark/>{loading ? "Connecting…" : "Continue with Google"}</button>
+        <div className="mt-7 flex items-center justify-center gap-2 text-xs text-slate-500"><ShieldCheck size={15} className="text-[#F39009]"/> Secure sign-in · Access managed by Administrator</div>
+        <p className="mt-16 text-center text-xs leading-6 text-slate-500">© {new Date().getFullYear()} Crescent Contractors. Internal use only.<br/><span className="text-slate-400">Designed &amp; Developed by <strong className="font-semibold text-[#8bd0ff]">Mutheeul Haq</strong></span></p>
       </div>
     </section>
   </main>;
