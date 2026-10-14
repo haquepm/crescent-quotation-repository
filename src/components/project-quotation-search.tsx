@@ -61,7 +61,8 @@ export default function ProjectQuotationSearch({allowAttachments=true}:{allowAtt
   },[projectId,supabase]);
 
   async function search() {
-    const chosen=items.find(i=>i.name.toLocaleLowerCase()===itemName.trim().toLocaleLowerCase());\n    if (!projectId || !chosen) { setError("Please select an item from the suggestions."); return; }
+    const chosen=items.find(i=>i.name.toLocaleLowerCase()===itemName.trim().toLocaleLowerCase());
+    if (!projectId || !chosen) { setError("Please select an item from the suggestions."); return; }
     setSearching(true); setError(""); setSearched(false); setResults([]);
     const { data, error } = await supabase.from("quotations")
       .select("id,quotation_date,quoted_rate,unit,labour,transport,gst_percent,description,make,quotation_file_path,vendors(name)")
