@@ -32,3 +32,74 @@ main .border-dashed { border-color:rgba(176,174,255,.25)!important; }
 aside button:hover,aside button.bg-white\/12 { background:rgba(169,149,255,.13)!important;color:white!important; }
 aside .text-blue-200\/50,aside .text-blue-200\/60,aside .text-blue-100\/70 { color:#898ba8!important; }
 main footer { color:#73758f!important; }
+
+
+/* Consistent dark-theme dropdowns across every module */
+:root { color-scheme: dark; }
+select,
+main select,
+main [role="combobox"],
+main [data-radix-select-trigger] {
+  color-scheme: dark !important;
+  background-color: #111426 !important;
+  color: #f1efff !important;
+  border: 1px solid rgba(176,174,255,.24) !important;
+}
+select option,
+select optgroup,
+main select option,
+main select optgroup {
+  background-color: #171a2c !important;
+  color: #eeecff !important;
+}
+select option:checked,
+main select option:checked {
+  background-color: #343052 !important;
+  color: #ffffff !important;
+}
+select:focus,
+main select:focus,
+main [role="combobox"]:focus-visible,
+main [data-radix-select-trigger]:focus-visible {
+  outline: 2px solid rgba(169,149,255,.65) !important;
+  outline-offset: 2px;
+  border-color: #a995ff !important;
+}
+/* Searchable/custom dropdown menus and autocomplete suggestion lists */
+main [role="listbox"],
+main [data-radix-select-content],
+main [data-radix-popover-content],
+main [data-state="open"][role="dialog"],
+main .dropdown-menu,
+main .autocomplete-menu,
+main [class*="suggestion"],
+main [class*="dropdown"] {
+  color: #eeecff;
+}
+main [role="listbox"],
+main [data-radix-select-content],
+main [data-radix-popover-content],
+main .dropdown-menu,
+main .autocomplete-menu {
+  background: #15182a !important;
+  border: 1px solid rgba(176,174,255,.22) !important;
+  box-shadow: 0 18px 45px rgba(0,0,0,.48), inset 0 1px rgba(255,255,255,.035) !important;
+  border-radius: 12px;
+  overflow: hidden;
+}
+main [role="option"],
+main [data-radix-select-item],
+main .dropdown-menu button,
+main .autocomplete-menu button {
+  color: #eae8fb !important;
+  background: transparent;
+}
+main [role="option"]:hover,
+main [role="option"][aria-selected="true"],
+main [data-radix-select-item]:hover,
+main [data-highlighted],
+main .dropdown-menu button:hover,
+main .autocomplete-menu button:hover {
+  color: #ffffff !important;
+  background: rgba(169,149,255,.19) !important;
+}
