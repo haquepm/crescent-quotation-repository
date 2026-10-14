@@ -14,6 +14,8 @@ export default function PriceAnalyser(){
  const [items,setItems]=useState<Item[]>([]);
  const [projectId,setProjectId]=useState("");
  const [itemName,setItemName]=useState("");
+ const [itemMenuOpen,setItemMenuOpen]=useState(false);
+ const matchingItems=items.filter(i=>!itemName.trim()||i.name.toLowerCase().includes(itemName.trim().toLowerCase())||(i.item_code??"").toLowerCase().includes(itemName.trim().toLowerCase())).slice(0,8);
  const [term,setTerm]=useState("");
  const [rows,setRows]=useState<Quote[]>([]);
  const [loading,setLoading]=useState(false);
@@ -29,7 +31,16 @@ export default function PriceAnalyser(){
   <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"><div className="mb-5"><div className="text-xs font-semibold tracking-[.16em] text-amber-700">RATE INTELLIGENCE</div><h2 className="mt-1 text-xl font-semibold text-slate-900">Price Analyser</h2><p className="mt-1 text-sm text-slate-500">Compare saved vendor quotations and identify the lowest quoted rate.</p></div>
    <div className="grid gap-4 md:grid-cols-3 md:items-end">
     <label className="text-sm font-medium text-slate-700">Project<select value={projectId} onChange={e=>setProjectId(e.target.value)} className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm"><option value="">All projects</option>{projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
-    <label className="text-sm font-medium text-slate-700">Item<input list="price-analyser-items" value={itemName} onChange={e=>setItemName(e.target.value)} autoComplete="off" placeholder="All items — start typing to search" className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm"/><datalist id="price-analyser-items">{items.map(i=><option key={i.id} value={i.name}>{i.item_code??""}</option>)}</datalist></label>
+    <div className="relative">
+     <label className="block text-sm font-medium text-slate-700">Item
+      <input value={itemName} onChange={e=>{setItemName(e.target.value);setItemMenuOpen(true);}} onFocus={()=>setItemMenuOpen(true)} onBlur={()=>window.setTimeout(()=>setItemMenuOpen(false),150)} autoComplete="off" placeholder="All items — start typing to search" className="mt-2 w-full rounded-lg border border-[#2b5268] bg-[#0c2638] px-3 py-3 text-sm text-slate-100 placeholder:text-slate-400 focus:border-[#1687bd] focus:outline-none focus:ring-2 focus:ring-[#1687bd]/30"/>
+     </label>
+     {itemMenuOpen&&<div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-[#27617d] !bg-[#0b2232] p-1 text-slate-100 shadow-2xl">
+      <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>{setItemName("");setItemMenuOpen(false);}} className="block w-full rounded-md px-3 py-2 text-left text-sm text-slate-300 hover:!bg-[#164763] hover:!text-white">All items</button>
+      {matchingItems.map(i=><button type="button" key={i.id} onMouseDown={e=>e.preventDefault()} onClick={()=>{setItemName(i.name);setItemMenuOpen(false);}} className="block w-full rounded-md px-3 py-2 text-left text-sm !text-slate-100 hover:!bg-[#164763] hover:!text-white"><span className="block font-medium">{i.name}</span>{i.item_code&&<span className="block text-xs !text-slate-400">{i.item_code}</span>}</button>)}
+      {!matchingItems.length&&<p className="px-3 py-2 text-sm text-slate-400">No matching items</p>}
+     </div>}
+    </div>
     <button onClick={search} disabled={loading} className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#075b83] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{loading?<LoaderCircle className="animate-spin" size={17}/>:<Search size={17}/>} Analyse quotations</button>
    </div>
    {error&&<p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
