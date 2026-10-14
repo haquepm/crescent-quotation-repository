@@ -19,6 +19,8 @@ export default function ProjectQuotationSearch({allowAttachments=true}:{allowAtt
   const [items,setItems] = useState<Item[]>([]);
   const [projectId,setProjectId] = useState("");
   const [itemName,setItemName] = useState("");
+  const [itemMenuOpen,setItemMenuOpen] = useState(false);
+  const matchingItems = items.filter(i=>!itemName.trim()||i.name.toLowerCase().includes(itemName.trim().toLowerCase())||(i.item_code??"").toLowerCase().includes(itemName.trim().toLowerCase())).slice(0,8);
   const [results,setResults] = useState<Quote[]>([]);
   const [loadingProjects,setLoadingProjects] = useState(true);
   const [loadingItems,setLoadingItems] = useState(false);
@@ -103,10 +105,15 @@ export default function ProjectQuotationSearch({allowAttachments=true}:{allowAtt
             {projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
         </label>
-        <label className="block text-sm font-medium text-slate-700">Item
-          <input list="project-quotation-items" value={itemName} onChange={e=>setItemName(e.target.value)} disabled={!projectId||loadingItems} autoComplete="off" placeholder={!projectId?"Select a project first":loadingItems?"Loading project items…":"Start typing an item name"} className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm"/>
-          <datalist id="project-quotation-items">{items.map(i=><option key={i.id} value={i.name}>{i.item_code??""}</option>)}</datalist>
-        </label>
+        <div className="relative">
+          <label className="block text-sm font-medium text-slate-700">Item
+            <input value={itemName} onChange={e=>{setItemName(e.target.value);setItemMenuOpen(true);}} onFocus={()=>setItemMenuOpen(true)} onBlur={()=>window.setTimeout(()=>setItemMenuOpen(false),150)} disabled={!projectId||loadingItems} autoComplete="off" placeholder={!projectId?"Select a project first":loadingItems?"Loading project items…":"Start typing an item name"} className="mt-2 w-full rounded-lg border border-[#2b5268] bg-[#0c2638] px-3 py-3 text-sm text-slate-100 placeholder:text-slate-400 focus:border-[#1687bd] focus:outline-none focus:ring-2 focus:ring-[#1687bd]/30 disabled:opacity-50"/>
+          </label>
+          {itemMenuOpen&&projectId&&!loadingItems&&<div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-[#27617d] !bg-[#0b2232] p-1 text-slate-100 shadow-2xl">
+            {matchingItems.map(i=><button type="button" key={i.id} onMouseDown={e=>e.preventDefault()} onClick={()=>{setItemName(i.name);setItemMenuOpen(false);}} className="block w-full rounded-md px-3 py-2 text-left text-sm !text-slate-100 hover:!bg-[#164763] hover:!text-white"><span className="block font-medium">{i.name}</span>{i.item_code&&<span className="block text-xs !text-slate-400">{i.item_code}</span>}</button>)}
+            {!matchingItems.length&&<p className="px-3 py-2 text-sm text-slate-400">No matching items for this project</p>}
+          </div>}
+        </div>
         <button onClick={search} disabled={!projectId||!itemName.trim()||searching} className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#075b83] px-6 py-3 text-sm font-semibold text-white hover:bg-[#064866] disabled:cursor-not-allowed disabled:opacity-50">
           {searching?<LoaderCircle className="animate-spin" size={17}/>:<Search size={17}/>} Search
         </button>
