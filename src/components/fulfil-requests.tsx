@@ -75,6 +75,8 @@ export default function FulfilRequests({userId}:{userId:string}){
    if(path&&file){const {error:metaError}=await supabase.from("quotation_attachments").insert({quotation_id:quote.id,request_id:selected.id,file_path:path,file_name:file.name,content_type:file.type||null,uploaded_by:userId});if(metaError)throw metaError;}
    const {error:statusError}=await supabase.from("quotation_requests").update({status:"completed",completed_at:new Date().toISOString()}).eq("id",selected.id);
    if(statusError)throw statusError;
+   const {error:historyError}=await supabase.from("request_status_history").insert({request_id:selected.id,old_status:selected.status,new_status:"completed",changed_by:userId,note:"Quotation saved to the ledger"});
+   if(historyError)throw historyError;
    setSuccess("Quotation saved and request marked as completed.");setSelected(null);await load();
   }catch(err){setError(err instanceof Error?err.message:"Unable to save quotation.");}
   finally{setLoading(false);}
