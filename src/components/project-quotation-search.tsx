@@ -90,10 +90,8 @@ export default function ProjectQuotationSearch({allowAttachments=true}:{allowAtt
           </select>
         </label>
         <label className="block text-sm font-medium text-slate-700">Item
-          <select value={itemId} onChange={e=>setItemId(e.target.value)} disabled={!projectId||loadingItems} className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm">
-            <option value="">{!projectId?"Select a project first":loadingItems?"Loading project items…":items.length?"Select item":"No quoted items found for this project"}</option>
-            {items.map(i=><option key={i.id} value={i.id}>{i.name}{i.item_code?" ("+i.item_code+")":""}</option>)}
-          </select>
+          <input list="project-quotation-items" value={itemName} onChange={e=>setItemName(e.target.value)} disabled={!projectId||loadingItems} autoComplete="off" placeholder={!projectId?"Select a project first":loadingItems?"Loading project items…":"Start typing an item name"} className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm"/>
+          <datalist id="project-quotation-items">{items.map(i=><option key={i.id} value={i.name}>{i.item_code??""}</option>)}</datalist>
         </label>
         <button onClick={search} disabled={!projectId||!itemName.trim()||searching} className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#075b83] px-6 py-3 text-sm font-semibold text-white hover:bg-[#064866] disabled:cursor-not-allowed disabled:opacity-50">
           {searching?<LoaderCircle className="animate-spin" size={17}/>:<Search size={17}/>} Search
