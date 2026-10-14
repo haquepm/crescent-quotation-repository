@@ -1,13 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Building2, ShieldCheck } from "lucide-react";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
-  const params = useSearchParams();
   async function signIn() {
     setLoading(true);
     try {
@@ -32,7 +30,6 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="lg:hidden flex items-center gap-3 mb-14"><Building2/><strong>CRESCENT CONTRACTORS</strong></div>
         <div className="mb-10"><p className="text-sm font-semibold tracking-widest text-amber-700">QUOTATION REPOSITORY</p><h2 className="mt-3 text-3xl font-semibold text-slate-900">Welcome back</h2><p className="mt-2 text-slate-500">Sign in using your authorised Google account.</p></div>
-        {params.get("error") && <p className="mb-5 rounded-lg bg-red-50 p-3 text-sm text-red-700">Sign-in could not be completed. Please try again.</p>}
         <button onClick={signIn} disabled={loading} className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white py-3.5 font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-60"><GoogleMark/>{loading ? "Connecting…" : "Continue with Google"}</button>
         <div className="mt-7 flex items-center justify-center gap-2 text-xs text-slate-400"><ShieldCheck size={15}/> Secure sign-in · Access managed by Administrator</div>
         <p className="mt-16 text-center text-xs text-slate-400">© {new Date().getFullYear()} Crescent Contractors. Internal use only.</p>
