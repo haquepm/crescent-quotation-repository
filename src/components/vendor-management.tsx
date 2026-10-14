@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, LoaderCircle, Users } from "lucide-react";
+import { Plus, Search, LoaderCircle, Users, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type Vendor={id:string;name:string;contact_person:string|null;email:string|null;phone:string|null;gst_number:string|null};
@@ -9,16 +9,19 @@ export default function VendorManagement(){
  const db=useMemo(()=>createClient(),[]);
  const [vendors,setVendors]=useState<Vendor[]>([]);
  const [term,setTerm]=useState("");
+ const [searchOpen,setSearchOpen]=useState(false);
+ const [selectedVendor,setSelectedVendor]=useState<Vendor|null>(null);
  const [name,setName]=useState(""); const [contact,setContact]=useState(""); const [email,setEmail]=useState(""); const [phone,setPhone]=useState(""); const [gst,setGst]=useState("");
  const [busy,setBusy]=useState(false); const [error,setError]=useState(""); const [success,setSuccess]=useState("");
  async function load(){const {data,error}=await db.from("vendors").select("id,name,contact_person,email,phone,gst_number").eq("is_active",true).order("name");if(error)setError(error.message);else setVendors((data??[]) as Vendor[]);}
  useEffect(()=>{void load();},[]);
- const matches=vendors.filter(v=>v.name.toLowerCase().includes(term.toLowerCase()));
+ const matches=vendors.filter(v=>v.name.toLowerCase().includes(term.trim().toLowerCase()));
+ function chooseVendor(v:Vendor){setSelectedVendor(v);setTerm(v.name);setSearchOpen(false);}
  async function add(){
   const clean=name.trim(); if(!clean)return;
   setBusy(true);setError("");setSuccess("");
   const existing=vendors.find(v=>v.name.toLowerCase()===clean.toLowerCase());
-  if(existing){setError("This vendor already exists. Select it from the existing vendor list.");setBusy(false);return;}
+  if(existing){setError("This vendor already exists. Select it from the search dropdown.");setBusy(false);return;}
   const {data,error}=await db.from("vendors").insert({name:clean,contact_person:contact.trim()||null,email:email.trim()||null,phone:phone.trim()||null,gst_number:gst.trim()||null}).select("id,name,contact_person,email,phone,gst_number").single();
   if(error)setError(error.message);else{setVendors(old=>[...old,data as Vendor].sort((a,b)=>a.name.localeCompare(b.name)));setSuccess("Vendor added successfully.");setName("");setContact("");setEmail("");setPhone("");setGst("");}
   setBusy(false);
@@ -27,9 +30,15 @@ export default function VendorManagement(){
   <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
    <div className="mb-5 flex items-center gap-3"><div className="rounded-lg bg-amber-50 p-3 text-amber-700"><Users/></div><div><h2 className="text-xl font-semibold">Vendor Directory</h2><p className="text-sm text-slate-500">Search existing vendors or add a new vendor for quotation entry.</p></div></div>
    <label className="block text-sm font-medium">Find existing vendor
-    <div className="relative mt-2"><Search className="absolute left-3 top-3 text-slate-400" size={17}/><input value={term} onChange={e=>setTerm(e.target.value)} placeholder="Start typing vendor name…" className="w-full rounded-lg border border-slate-300 py-3 pl-10 pr-3 text-sm"/></div>
+    <div className="relative mt-2">
+     <Search className="absolute left-3 top-3 z-10 text-slate-400" size={17}/>
+     <input value={term} onFocus={()=>setSearchOpen(true)} onChange={e=>{setTerm(e.target.value);setSelectedVendor(null);setSearchOpen(true);}} placeholder="Start typing vendor name…" autoComplete="off" className="w-full rounded-lg border border-slate-300 py-3 pl-10 pr-3 text-sm"/>
+     {searchOpen&&term.trim()&&<div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-64 overflow-y-auto rounded-xl border border-sky-900/70 bg-[#071b29] p-1 shadow-2xl">
+      {matches.length?matches.map(v=><button type="button" key={v.id} onMouseDown={e=>e.preventDefault()} onClick={()=>chooseVendor(v)} className="flex w-full items-center justify-between rounded-lg px-4 py-3 text-left text-sm text-slate-100 transition-colors hover:bg-[#123c55] focus:bg-[#123c55] focus:outline-none"><span className="font-semibold">{v.name}</span><span className="ml-4 text-xs text-slate-400">{v.phone||v.email||""}</span></button>):<p className="px-4 py-3 text-sm text-slate-300">No matching vendor found.</p>}
+     </div>}
+    </div>
    </label>
-   <div className="mt-3 max-h-56 overflow-auto rounded-lg border border-slate-100">{matches.length?matches.map(v=><div key={v.id} className="flex justify-between border-b border-slate-100 px-4 py-3 text-sm"><span className="font-medium">{v.name}</span><span className="text-slate-500">{v.phone||v.email||""}</span></div>):<p className="p-4 text-sm text-slate-500">No matching vendor found.</p>}</div>
+   {selectedVendor&&<div className="mt-3 flex items-center gap-2 text-xs text-sky-200"><Check size={14}/> Selected: {selectedVendor.name}</div>}
   </div>
   <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
    <h3 className="flex items-center gap-2 font-semibold"><Plus size={18}/> Add New Vendor</h3><p className="mt-1 text-sm text-slate-500">A duplicate name is not allowed.</p>
