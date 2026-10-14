@@ -13,7 +13,7 @@ export default function PriceAnalyser(){
  const [projects,setProjects]=useState<Project[]>([]);
  const [items,setItems]=useState<Item[]>([]);
  const [projectId,setProjectId]=useState("");
- const [itemId,setItemId]=useState("");
+ const [itemName,setItemName]=useState("");
  const [term,setTerm]=useState("");
  const [rows,setRows]=useState<Quote[]>([]);
  const [loading,setLoading]=useState(false);
@@ -21,7 +21,7 @@ export default function PriceAnalyser(){
  const [error,setError]=useState("");
  useEffect(()=>{let live=true;(async()=>{const {data,error}=await supabase.from("projects").select("id,name").eq("is_active",true).order("name");if(!live)return;if(error)setError(error.message);else setProjects((data??[]) as Project[])})();return()=>{live=false}},[supabase]);
  useEffect(()=>{let live=true;(async()=>{const {data,error}=await supabase.from("items").select("id,name,item_code").eq("is_active",true).order("name");if(!live)return;if(error)setError(error.message);else setItems((data??[]) as Item[])})();return()=>{live=false}},[supabase]);
- async function search(){setLoading(true);setError("");setSearched(false);let q=supabase.from("quotations").select("id,quotation_date,quoted_rate,adjusted_rate,labour,transport,gst_percent,make,description,vendors(name),projects(name),items(name)").order("quotation_date",{ascending:false}).limit(500);if(projectId)q=q.eq("project_id",projectId);if(itemId)q=q.eq("item_id",itemId);const {data,error}=await q;if(error)setError(error.message);else setRows((data??[]) as unknown as Quote[]);setLoading(false);setSearched(true)}
+ async function search(){setLoading(true);setError("");setSearched(false);const chosen=items.find(i=>i.name.toLocaleLowerCase()===itemName.trim().toLocaleLowerCase());if(itemName.trim()&&!chosen){setError("Please select an item from the suggestions, or clear the field to analyse all items.");setLoading(false);return;}let q=supabase.from("quotations").select("id,quotation_date,quoted_rate,adjusted_rate,labour,transport,gst_percent,make,description,vendors(name),projects(name),items(name)").order("quotation_date",{ascending:false}).limit(500);if(projectId)q=q.eq("project_id",projectId);if(chosen)q=q.eq("item_id",chosen.id);const {data,error}=await q;if(error)setError(error.message);else setRows((data??[]) as unknown as Quote[]);setLoading(false);setSearched(true)}
  const filtered=rows.filter(r=>!term||[r.vendors?.name,r.make,r.description,r.items?.name].some(v=>v?.toLowerCase().includes(term.toLowerCase())));
  const lowest=filtered.length?Math.min(...filtered.map(r=>Number(r.adjusted_rate??r.quoted_rate))):null;
  const money=(v:number)=>"₹"+Number(v||0).toLocaleString("en-IN",{maximumFractionDigits:2});
@@ -29,7 +29,7 @@ export default function PriceAnalyser(){
   <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"><div className="mb-5"><div className="text-xs font-semibold tracking-[.16em] text-amber-700">RATE INTELLIGENCE</div><h2 className="mt-1 text-xl font-semibold text-slate-900">Price Analyser</h2><p className="mt-1 text-sm text-slate-500">Compare saved vendor quotations and identify the lowest adjusted rate.</p></div>
    <div className="grid gap-4 md:grid-cols-3 md:items-end">
     <label className="text-sm font-medium text-slate-700">Project<select value={projectId} onChange={e=>setProjectId(e.target.value)} className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm"><option value="">All projects</option>{projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
-    <label className="text-sm font-medium text-slate-700">Item<select value={itemId} onChange={e=>setItemId(e.target.value)} className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm"><option value="">All items</option>{items.map(i=><option key={i.id} value={i.id}>{i.name}{i.item_code?" ("+i.item_code+")":""}</option>)}</select></label>
+    <label className="text-sm font-medium text-slate-700">Item<input list="price-analyser-items" value={itemName} onChange={e=>setItemName(e.target.value)} autoComplete="off" placeholder="All items — start typing to search" className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm"/><datalist id="price-analyser-items">{items.map(i=><option key={i.id} value={i.name}>{i.item_code??""}</option>)}</datalist></label>
     <button onClick={search} disabled={loading} className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#075b83] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{loading?<LoaderCircle className="animate-spin" size={17}/>:<Search size={17}/>} Analyse quotations</button>
    </div>
    {error&&<p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
