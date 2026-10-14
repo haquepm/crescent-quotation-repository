@@ -4,7 +4,7 @@ import {useCallback,useEffect,useMemo,useState} from "react";
 import {CheckCircle2,FileText,LoaderCircle,Plus,RefreshCw,Save,Search,UploadCloud,X} from "lucide-react";
 import {createClient} from "@/lib/supabase/client";
 
-type RequestRow={id:string;request_number:number;created_at:string;description:string|null;make:string|null;purpose:string|null;boq_file_path:string|null;status:string;projects:{name:string}|null;items:{name:string;item_code:string|null;unit:string|null}|null;profiles:{full_name:string|null;email:string|null}|null};
+type RequestRow={id:string;project_id:string;item_id:string;request_number:number;created_at:string;description:string|null;make:string|null;purpose:string|null;boq_file_path:string|null;status:string;projects:{name:string}|null;items:{name:string;item_code:string|null;unit:string|null}|null;profiles:{full_name:string|null;email:string|null}|null};
 type Vendor={id:string;name:string;contact_person:string|null;email:string|null;phone:string|null;gst_number:string|null};
 
 export default function FulfilRequests({userId}:{userId:string}){
@@ -36,7 +36,7 @@ export default function FulfilRequests({userId}:{userId:string}){
  const load=useCallback(async()=>{
   setError("");
   const [rq,vn]=await Promise.all([
-   supabase.from("quotation_requests").select("id,request_number,created_at,description,make,purpose,boq_file_path,status,projects(name),items(name,item_code,unit),profiles!quotation_requests_estimator_id_fkey(full_name,email)").in("status",["pending","in_progress"]).order("created_at",{ascending:true}),
+   supabase.from("quotation_requests").select("id,project_id,item_id,request_number,created_at,description,make,purpose,boq_file_path,status,projects(name),items(name,item_code,unit),profiles!quotation_requests_estimator_id_fkey(full_name,email)").in("status",["pending","in_progress"]).order("created_at",{ascending:true}),
    supabase.from("vendors").select("id,name,contact_person,email,phone,gst_number").eq("is_active",true).order("name")
   ]);
   if(rq.error)setError(rq.error.message);else setRequests((rq.data??[]) as unknown as RequestRow[]);
@@ -66,7 +66,7 @@ export default function FulfilRequests({userId}:{userId:string}){
    let path:string|null=null;
    if(file){path=userId+"/"+crypto.randomUUID()+"-"+file.name.replace(/[^a-zA-Z0-9._-]/g,"_");const {error:up}=await supabase.storage.from("quotation-files").upload(path,file,{contentType:file.type||"application/octet-stream",upsert:false});if(up)throw up;}
    const {data:quote,error:quoteError}=await supabase.from("quotations").insert({
-    request_id:selected.id,project_id:(selected as any).project_id??undefined,item_id:(selected as any).item_id??undefined,
+    request_id:selected.id,project_id:selected.project_id,item_id:selected.item_id,
     vendor_id:vendorId,quotation_date:date,quoted_rate:n,adjusted_rate:adjustedRate===""?null:Number(adjustedRate),
     labour:Number(labour||0),transport:Number(transport||0),gst_percent:gst===""?null:Number(gst),
     description:description.trim()||null,make:make.trim()||null,quotation_file_path:path,created_by:userId
