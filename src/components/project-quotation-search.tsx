@@ -3,17 +3,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { Search, RotateCcw, FileText, LoaderCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import AdminQuotationActions from "@/components/admin-quotation-actions";
 
 type Project = { id: string; name: string };
 type Item = { id: string; name: string; item_code: string | null };
 type Quote = {
   id: string; quotation_date: string; quoted_rate: number; unit: string | null;
-  labour: number | null; transport: number | null; gst_percent: number | null;
+  labour: number | null; transport: number | null; gst_percent: number | null; labour_included?:boolean; transport_included?:boolean; gst_included?:boolean;
   description: string | null; make: string | null; quotation_file_path: string | null;
   vendors?: { name: string } | null;
 };
 
-export default function ProjectQuotationSearch({allowAttachments=true}:{allowAttachments?:boolean}) {
+export default function ProjectQuotationSearch({allowAttachments=true,isAdmin=false}:{allowAttachments?:boolean;isAdmin?:boolean}) {
   const supabase = useMemo(() => createClient(), []);
   const [projects,setProjects] = useState<Project[]>([]);
   const [items,setItems] = useState<Item[]>([]);
@@ -81,7 +82,7 @@ export default function ProjectQuotationSearch({allowAttachments=true}:{allowAtt
     if (!projectId || !chosen) { setError("Please select an item from the suggestions."); return; }
     setSearching(true); setError(""); setSearched(false); setResults([]); setVendorFilter("all"); setMakeFilter("all"); setDateSort("latest");
     const { data, error } = await supabase.from("quotations")
-      .select("id,quotation_date,quoted_rate,unit,labour,transport,gst_percent,description,make,quotation_file_path,vendors(name)")
+      .select("id,quotation_date,quoted_rate,unit,labour,transport,gst_percent,labour_included,transport_included,gst_included,description,make,quotation_file_path,vendors(name)")
       .eq("project_id",projectId).eq("item_id",chosen.id).order("quotation_date",{ascending:false});
     if (error) setError(error.message);
     else setResults((data ?? []) as unknown as Quote[]);
@@ -136,7 +137,7 @@ export default function ProjectQuotationSearch({allowAttachments=true}:{allowAtt
         </label>
       </div>
       {!filteredResults.length?<div className="p-10 text-center text-sm text-slate-500">No quotations match the selected filters. Try changing or clearing the filters.</div>:
-      <div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left text-sm"><thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-3">Date</th><th className="px-4 py-3">Vendor</th><th className="px-4 py-3">Make / Description</th><th className="px-4 py-3 text-right">Quoted rate</th><th className="px-4 py-3">Unit</th><th className="px-4 py-3 text-right">Labour</th><th className="px-4 py-3 text-right">Transport</th><th className="px-4 py-3 text-right">GST</th>{allowAttachments&&<th className="px-4 py-3">Attachment</th>}</tr></thead><tbody className="divide-y divide-slate-100">{filteredResults.map(q=><tr key={q.id} className="hover:bg-slate-50/70"><td className="whitespace-nowrap px-4 py-3">{q.quotation_date?new Date(q.quotation_date).toLocaleDateString("en-IN"):"—"}</td><td className="px-4 py-3 font-medium">{q.vendors?.name??"—"}</td><td className="max-w-[240px] px-4 py-3"><div className="font-medium">{q.make||"—"}</div><div className="text-xs text-slate-500">{q.description||"—"}</div></td><td className="px-4 py-3 text-right tabular-nums">₹{Number(q.quoted_rate||0).toLocaleString("en-IN",{maximumFractionDigits:2})}</td><td className="px-4 py-3">{q.unit??"—"}</td><td className="px-4 py-3 text-right tabular-nums">{q.labour??"—"}</td><td className="px-4 py-3 text-right tabular-nums">{q.transport??"—"}</td><td className="px-4 py-3 text-right tabular-nums">{q.gst_percent==null?"—":String(q.gst_percent)+"%"}</td>{allowAttachments&&<td className="px-4 py-3">{q.quotation_file_path?<button onClick={()=>void openAttachment(q.quotation_file_path)} className="inline-flex items-center gap-1 text-xs font-semibold text-sky-700 hover:underline"><FileText size={14}/> View file</button>:"—"}</td>}</tr>)}</tbody></table></div>}
+      <div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left text-sm"><thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-3">Date</th><th className="px-4 py-3">Vendor</th><th className="px-4 py-3">Make / Description</th><th className="px-4 py-3 text-right">Quoted rate</th><th className="px-4 py-3">Unit</th><th className="px-4 py-3 text-right">Labour</th><th className="px-4 py-3 text-right">Transport</th><th className="px-4 py-3 text-right">GST</th>{allowAttachments&&<th className="px-4 py-3">Attachment</th>}{isAdmin&&<th className="px-4 py-3">Admin actions</th>}</tr></thead><tbody className="divide-y divide-slate-100">{filteredResults.map(q=><tr key={q.id} className="hover:bg-slate-50/70"><td className="whitespace-nowrap px-4 py-3">{q.quotation_date?new Date(q.quotation_date).toLocaleDateString("en-IN"):"—"}</td><td className="px-4 py-3 font-medium">{q.vendors?.name??"—"}</td><td className="max-w-[240px] px-4 py-3"><div className="font-medium">{q.make||"—"}</div><div className="text-xs text-slate-500">{q.description||"—"}</div></td><td className="px-4 py-3 text-right tabular-nums">₹{Number(q.quoted_rate||0).toLocaleString("en-IN",{maximumFractionDigits:2})}</td><td className="px-4 py-3">{q.unit??"—"}</td><td className="px-4 py-3 text-right tabular-nums">{q.labour??"—"}</td><td className="px-4 py-3 text-right tabular-nums">{q.transport??"—"}</td><td className="px-4 py-3 text-right tabular-nums">{q.gst_percent==null?"—":String(q.gst_percent)+"%"}</td>{allowAttachments&&<td className="px-4 py-3">{q.quotation_file_path?<button onClick={()=>void openAttachment(q.quotation_file_path)} className="inline-flex items-center gap-1 text-xs font-semibold text-sky-700 hover:underline"><FileText size={14}/> View file</button>:"—"}</td>}{isAdmin&&<td className="px-4 py-3"><AdminQuotationActions quote={q} onChanged={()=>void search()}/></td>}</tr>)}</tbody></table></div>}
       </>}
     </div>}
   </section>;
