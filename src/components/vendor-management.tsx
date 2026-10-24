@@ -41,6 +41,25 @@ export default function VendorManagement(){
    {selectedVendor&&<div className="mt-3 flex items-center gap-2 text-xs text-sky-200"><Check size={14}/> Selected: {selectedVendor.name}</div>}
   </div>
   <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+   <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+    <div><h3 className="text-lg font-semibold">Vendor List</h3><p className="mt-1 text-sm text-slate-500">Vendor contact and registration details.</p></div>
+    <span className="rounded-full bg-sky-50 px-3 py-1 text-sm font-semibold text-sky-800">{vendors.length} vendors</span>
+   </div>
+   <div className="overflow-x-auto">
+    <table className="w-full min-w-[850px] border-collapse text-left text-sm">
+     <thead><tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
+      <th className="px-3 py-3 font-semibold">Vendor name</th><th className="px-3 py-3 font-semibold">Contact person</th><th className="px-3 py-3 font-semibold">Email</th><th className="px-3 py-3 font-semibold">Phone</th><th className="px-3 py-3 font-semibold">GST number</th>
+     </tr></thead>
+     <tbody className="divide-y divide-slate-100">
+      {(term.trim()?matches:vendors).map(v=><tr key={v.id} className="transition-colors hover:bg-slate-50">
+       <td className="px-3 py-3 font-semibold text-slate-900">{v.name}</td><td className="px-3 py-3 text-slate-600">{v.contact_person||"—"}</td><td className="px-3 py-3 text-slate-600">{v.email||"—"}</td><td className="px-3 py-3 text-slate-600">{v.phone||"—"}</td><td className="px-3 py-3 text-slate-600">{v.gst_number||"—"}</td>
+      </tr>)}
+      {(term.trim()?matches:vendors).length===0&&<tr><td colSpan={5} className="px-3 py-8 text-center text-slate-500">{term.trim()?"No vendors match your search.":"No vendors have been added yet."}</td></tr>}
+     </tbody>
+    </table>
+   </div>
+  </div>
+  <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
    <h3 className="flex items-center gap-2 font-semibold"><Plus size={18}/> Add New Vendor</h3><p className="mt-1 text-sm text-slate-500">A duplicate name is not allowed.</p>
    <div className="mt-5 grid gap-4 md:grid-cols-2">
     <label className="text-sm font-medium">Vendor name *<input value={name} onChange={e=>setName(e.target.value)} list="known-vendors" placeholder="Enter vendor name" className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-3 text-sm"/><datalist id="known-vendors">{vendors.map(v=><option key={v.id} value={v.name}/>)}</datalist></label>
