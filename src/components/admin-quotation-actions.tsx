@@ -12,7 +12,7 @@ export type EditableQuotation = {
 };
 type QuoteAttachment={id:string;file_path:string;file_name:string;content_type:string|null;created_at?:string};
 
-export default function AdminQuotationActions({quote,onChanged}:{quote:EditableQuotation;onChanged:()=>void}) {
+export default function AdminQuotationActions({quote,onChanged,canDelete=false}:{quote:EditableQuotation;onChanged:()=>void;canDelete?:boolean}) {
  const db=createClient();
  const [open,setOpen]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState("");
  const [attachments,setAttachments]=useState<QuoteAttachment[]>([]),[attachmentsLoading,setAttachmentsLoading]=useState(false),[newQuoteFile,setNewQuoteFile]=useState<File|null>(null),[newAdditionalFiles,setNewAdditionalFiles]=useState<File[]>([]);
@@ -75,7 +75,7 @@ export default function AdminQuotationActions({quote,onChanged}:{quote:EditableQ
  }
  return <div className="flex items-center gap-2">
   <button type="button" title="Edit quotation" onClick={()=>{setError("");setOpen(true);void loadAttachments();}} className="rounded-md border border-sky-700/50 px-2.5 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-50"><Pencil size={14}/></button>
-  <button type="button" title="Delete quotation" disabled={busy} onClick={()=>void remove()} className="rounded-md border border-red-300 px-2.5 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"><Trash2 size={14}/></button>
+  {canDelete&&<button type="button" title="Delete quotation" disabled={busy} onClick={()=>void remove()} className="rounded-md border border-red-300 px-2.5 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"><Trash2 size={14}/></button>}
   {open&&<div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4" onMouseDown={e=>{if(e.target===e.currentTarget)setOpen(false)}}><div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-[#24516b] bg-[#0b2232] p-6 text-slate-100 shadow-2xl">
    <div className="mb-5 flex items-center justify-between"><div><h3 className="text-lg font-semibold">Edit quotation</h3><p className="text-xs text-slate-400">Correct the saved quotation details.</p></div><button type="button" onClick={()=>setOpen(false)} className="rounded-lg p-2 hover:bg-white/10"><X size={18}/></button></div>
    <div className="grid gap-4 sm:grid-cols-2">
