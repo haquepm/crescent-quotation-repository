@@ -19,6 +19,7 @@ export default function AdminQuotationActions({quote,onChanged,canDelete=false}:
  const [date,setDate]=useState(quote.quotation_date),[rate,setRate]=useState(String(quote.quoted_rate??"")),[unit,setUnit]=useState(quote.unit??"");
  const [labour,setLabour]=useState(String(quote.labour??0)),[transport,setTransport]=useState(String(quote.transport??0)),[gst,setGst]=useState(quote.gst_percent==null?"":String(quote.gst_percent));
  const [make,setMake]=useState(quote.make??""),[description,setDescription]=useState(quote.description??"");
+ const [items,setItems]=useState<Array<{id:string;name:string;item_code:string|null}>>([]),[itemId,setItemId]=useState(quote.item_id??""),[itemSearch,setItemSearch]=useState(quote.items?.name??""),[itemMenuOpen,setItemMenuOpen]=useState(false);
  const [labourIncluded,setLabourIncluded]=useState(!!quote.labour_included),[transportIncluded,setTransportIncluded]=useState(!!quote.transport_included),[gstIncluded,setGstIncluded]=useState(!!quote.gst_included);
  async function loadItems(){const {data,error}=await db.from("items").select("id,name,item_code").eq("is_active",true).order("name");if(error)setError(error.message);else setItems(data??[]);}
  async function loadAttachments(){
@@ -59,6 +60,7 @@ export default function AdminQuotationActions({quote,onChanged,canDelete=false}:
  }
  async function openAttachment(path:string){const {data,error}=await db.storage.from("quotation-files").createSignedUrl(path,60);if(error){setError(error.message);return;}if(data?.signedUrl)window.open(data.signedUrl,"_blank","noopener,noreferrer");}
  async function save(){
+  if(!itemId){setError("Please select an existing item from the Item Name suggestions. If it is a new item, add it in Project & Item Masters first.");return;}
   const n=Number(rate);if(!date||!Number.isFinite(n)||n<0){setError("Enter a valid quotation date and quoted rate.");return;}
   setBusy(true);setError("");
   const {error}=await db.from("quotations").update({quotation_date:date,quoted_rate:n,item_id:itemId||null,unit:unit.trim()||null,labour:Number(labour||0),transport:Number(transport||0),gst_percent:gst===""?null:Number(gst),make:make.trim()||null,description:description.trim()||null,labour_included:labourIncluded,transport_included:transportIncluded,gst_included:gstIncluded}).eq("id",quote.id);
