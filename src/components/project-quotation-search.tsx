@@ -8,7 +8,7 @@ import AdminQuotationActions from "@/components/admin-quotation-actions";
 type Project = { id: string; name: string };
 type Item = { id: string; name: string; item_code: string | null };
 type Quote = {
-  id: string; quotation_date: string; quoted_rate: number; unit: string | null;
+  id: string; item_id:string; items?:{id:string;name:string}|null; quotation_date: string; quoted_rate: number; unit: string | null;
   labour: number | null; transport: number | null; gst_percent: number | null; labour_included?:boolean; transport_included?:boolean; gst_included?:boolean;
   description: string | null; make: string | null; quotation_file_path: string | null;
   vendors?: { name: string } | null;
@@ -82,7 +82,7 @@ export default function ProjectQuotationSearch({allowAttachments=true,isAdmin=fa
     if (!projectId || !chosen) { setError("Please select an item from the suggestions."); return; }
     setSearching(true); setError(""); setSearched(false); setResults([]); setVendorFilter("all"); setMakeFilter("all"); setDateSort("latest");
     const { data, error } = await supabase.from("quotations")
-      .select("id,quotation_date,quoted_rate,unit,labour,transport,gst_percent,labour_included,transport_included,gst_included,description,make,quotation_file_path,vendors(name)")
+      .select("id,item_id,quotation_date,quoted_rate,unit,labour,transport,gst_percent,labour_included,transport_included,gst_included,description,make,quotation_file_path,vendors(name),items(id,name)")
       .eq("project_id",projectId).eq("item_id",chosen.id).order("quotation_date",{ascending:false});
     if (error) setError(error.message);
     else setResults((data ?? []) as unknown as Quote[]);
