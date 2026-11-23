@@ -5,7 +5,7 @@ import { Pencil, Trash2, X, LoaderCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export type EditableQuotation = {
- id:string; quotation_date:string; quoted_rate:number; unit:string|null;
+ id:string; quotation_date:string; quoted_rate:number; unit:string|null; item_id?:string; items?:{name:string}|null;
  labour:number|null; transport:number|null; gst_percent:number|null;
  labour_included?:boolean; transport_included?:boolean; gst_included?:boolean;
  make:string|null; description:string|null; quotation_file_path:string|null;
@@ -20,6 +20,7 @@ export default function AdminQuotationActions({quote,onChanged,canDelete=false}:
  const [labour,setLabour]=useState(String(quote.labour??0)),[transport,setTransport]=useState(String(quote.transport??0)),[gst,setGst]=useState(quote.gst_percent==null?"":String(quote.gst_percent));
  const [make,setMake]=useState(quote.make??""),[description,setDescription]=useState(quote.description??"");
  const [labourIncluded,setLabourIncluded]=useState(!!quote.labour_included),[transportIncluded,setTransportIncluded]=useState(!!quote.transport_included),[gstIncluded,setGstIncluded]=useState(!!quote.gst_included);
+ async function loadItems(){const {data,error}=await db.from("items").select("id,name,item_code").eq("is_active",true).order("name");if(error)setError(error.message);else setItems(data??[]);}
  async function loadAttachments(){
   setAttachmentsLoading(true);setError("");
   const {data,error}=await db.from("quotation_attachments").select("id,file_path,file_name,content_type,created_at").eq("quotation_id",quote.id).order("created_at",{ascending:true});
@@ -60,7 +61,7 @@ export default function AdminQuotationActions({quote,onChanged,canDelete=false}:
  async function save(){
   const n=Number(rate);if(!date||!Number.isFinite(n)||n<0){setError("Enter a valid quotation date and quoted rate.");return;}
   setBusy(true);setError("");
-  const {error}=await db.from("quotations").update({quotation_date:date,quoted_rate:n,unit:unit.trim()||null,labour:Number(labour||0),transport:Number(transport||0),gst_percent:gst===""?null:Number(gst),make:make.trim()||null,description:description.trim()||null,labour_included:labourIncluded,transport_included:transportIncluded,gst_included:gstIncluded}).eq("id",quote.id);
+  const {error}=await db.from("quotations").update({quotation_date:date,quoted_rate:n,item_id:itemId||null,unit:unit.trim()||null,labour:Number(labour||0),transport:Number(transport||0),gst_percent:gst===""?null:Number(gst),make:make.trim()||null,description:description.trim()||null,labour_included:labourIncluded,transport_included:transportIncluded,gst_included:gstIncluded}).eq("id",quote.id);
   setBusy(false);if(error){setError(error.message);return;}setOpen(false);onChanged();
  }
  async function remove(){
@@ -74,11 +75,12 @@ export default function AdminQuotationActions({quote,onChanged,canDelete=false}:
   setBusy(false);if(error){setError(error.message);return;}onChanged();
  }
  return <div className="flex items-center gap-2">
-  <button type="button" title="Edit quotation" onClick={()=>{setError("");setOpen(true);void loadAttachments();}} className="rounded-md border border-sky-700/50 px-2.5 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-50"><Pencil size={14}/></button>
+  <button type="button" title="Edit quotation" onClick={()=>{setError("");setItemId(quote.item_id??"");setItemSearch(quote.items?.name??"");setOpen(true);void loadAttachments();void loadItems();}} className="rounded-md border border-sky-700/50 px-2.5 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-50"><Pencil size={14}/></button>
   {canDelete&&<button type="button" title="Delete quotation" disabled={busy} onClick={()=>void remove()} className="rounded-md border border-red-300 px-2.5 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"><Trash2 size={14}/></button>}
   {open&&<div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4" onMouseDown={e=>{if(e.target===e.currentTarget)setOpen(false)}}><div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-[#24516b] bg-[#0b2232] p-6 text-slate-100 shadow-2xl">
    <div className="mb-5 flex items-center justify-between"><div><h3 className="text-lg font-semibold">Edit quotation</h3><p className="text-xs text-slate-400">Correct the saved quotation details.</p></div><button type="button" onClick={()=>setOpen(false)} className="rounded-lg p-2 hover:bg-white/10"><X size={18}/></button></div>
    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="relative sm:col-span-2"><label className="block text-sm">Item name<input value={itemSearch} onChange={e=>{setItemSearch(e.target.value);setItemId("");setItemMenuOpen(true);}} onFocus={()=>setItemMenuOpen(true)} onBlur={()=>window.setTimeout(()=>setItemMenuOpen(false),150)} autoComplete="off" placeholder="Search and select item" className="mt-1.5 w-full rounded-lg border border-[#31566d] bg-[#101827] px-3 py-2.5"/></label>{itemMenuOpen&&<div className="absolute z-[210] mt-1 max-h-52 w-full overflow-y-auto rounded-lg border border-[#31566d] bg-[#0b2232] p-1 shadow-xl">{items.filter(i=>!itemSearch.trim()||i.name.toLowerCase().includes(itemSearch.toLowerCase())||(i.item_code??"").toLowerCase().includes(itemSearch.toLowerCase())).slice(0,20).map(i=><button type="button" key={i.id} onMouseDown={e=>e.preventDefault()} onClick={()=>{setItemId(i.id);setItemSearch(i.name);setItemMenuOpen(false);}} className="block w-full rounded-md px-3 py-2 text-left text-sm text-slate-100 hover:bg-[#164763]">{i.name}{i.item_code?" · "+i.item_code:""}</button>)}{!items.some(i=>i.name.toLowerCase()===itemSearch.trim().toLowerCase())&&<p className="px-3 py-2 text-xs text-slate-400">No matching item. Add it in Project & Item Masters first.</p>}</div>}</div>
     <label className="text-sm">Quotation date<input type="date" value={date} onChange={e=>setDate(e.target.value)} className="mt-1.5 w-full rounded-lg border border-[#31566d] bg-[#101827] px-3 py-2.5"/></label>
     <label className="text-sm">Quoted rate (₹)<input type="number" min="0" step="0.01" value={rate} onChange={e=>setRate(e.target.value)} className="mt-1.5 w-full rounded-lg border border-[#31566d] bg-[#101827] px-3 py-2.5"/></label>
     <label className="text-sm">Unit<input value={unit} onChange={e=>setUnit(e.target.value)} className="mt-1.5 w-full rounded-lg border border-[#31566d] bg-[#101827] px-3 py-2.5"/></label>
